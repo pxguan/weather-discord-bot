@@ -476,19 +476,25 @@ class ReportGenerator:
 
 def main():
     """主函数"""
-    print("=" * 60)
-    print("📰 RSS 日报生成器 - Andrej Karpathy 精选")
-    print("=" * 60)
+    try:
+        print("=" * 60)
+        print("📰 RSS 日报生成器 - Andrej Karpathy 精选")
+        print("=" * 60)
 
-    # 从环境变量获取配置
-    feishu_app_id = os.getenv('FEISHU_APP_ID')
-    feishu_app_secret = os.getenv('FEISHU_APP_SECRET')
-    rss_pack_url = os.getenv('RSS_PACK_URL', 'https://youmind.com/rss/pack/andrej-karpathy-curated-rss')
+        # 从环境变量获取配置
+        feishu_app_id = os.getenv('FEISHU_APP_ID')
+        feishu_app_secret = os.getenv('FEISHU_APP_SECRET')
+        rss_pack_url = os.getenv('RSS_PACK_URL', 'https://youmind.com/rss/pack/andrej-karpathy-curated-rss')
 
-    if not feishu_app_id or not feishu_app_secret:
-        print("❌ 错误: 缺少飞书 API 凭证")
-        print("请设置环境变量: FEISHU_APP_ID 和 FEISHU_APP_SECRET")
-        sys.exit(1)
+        print(f"\n🔍 环境检查:")
+        print(f"  - FEISHU_APP_ID: {'已设置' if feishu_app_id else '未设置'}")
+        print(f"  - FEISHU_APP_SECRET: {'已设置' if feishu_app_secret else '未设置'}")
+        print(f"  - RSS_PACK_URL: {rss_pack_url}")
+
+        if not feishu_app_id or not feishu_app_secret:
+            print("\n❌ 错误: 缺少飞书 API 凭证")
+            print("请设置环境变量: FEISHU_APP_ID 和 FEISHU_APP_SECRET")
+            sys.exit(1)
 
     # 1. 获取 RSS 内容
     print("\n📡 步骤 1: 获取 RSS 内容")
@@ -537,9 +543,20 @@ def main():
     else:
         print("⚠️  飞书认证失败，日报已生成本地文件")
 
-    print("\n" + "=" * 60)
-    print("✅ 任务完成")
-    print("=" * 60)
+        print("\n" + "=" * 60)
+        print("✅ 任务完成")
+        print("=" * 60)
+
+    except Exception as e:
+        print("\n" + "=" * 60)
+        print("❌ 任务失败")
+        print("=" * 60)
+        print(f"\n错误类型: {type(e).__name__}")
+        print(f"错误信息: {str(e)}")
+        print("\n完整堆栈跟踪:")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
 
 
 if __name__ == "__main__":
