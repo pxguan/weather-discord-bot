@@ -1,0 +1,72 @@
+name: Daily Weather to Discord
+
+on:
+  schedule:
+    # 每天 UTC 8:00 运行 (北京时间 16:00)
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+    # 支持手动触发
+
+permissions:
+  contents: read
+
+jobs:
+  weather-notification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Get Weather Info
+        id: weather
+        run: |
+          # 使用 wttr.in API 获取广州天气
+          WEATHER=$(curl -s 'https://wttr.in/Guangzhou?format=%C+%t&lang=zh')
+
+          # 获取更详细的天气信息
+          WEATHER_FULL=$(curl -s 'https://wttr.in/Guangzhou?format=3&lang=zh')
+
+          # 获取天气图标
+          WEATHER_ICON=$(curl -s 'https://wttr.in/Guangzhou?format=%c&lang=zh')
+
+          echo "weather=$WEATHER" >> $GITHUB_OUTPUT
+          echo "weather_full=$WEATHER_FULL" >> $GITHUB_OUTPUT
+          echo "weather_icon=$WEATHER_ICON" >> $GITHUB_OUTPUT
+
+          echo "今日天气: $WEATHER_ICON $WEATHER"
+
+      - name: Send to Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          WEATHER: ${{ steps.weather.outputs.weather }}
+          WEATHER_FULL: ${{ steps.weather.outputs.weather_full }}
+          WEATHER_ICON: ${{ steps.weather.outputs.weather_icon }}
+        run: |
+          # 获取当前日期
+          TODAY=$(date '+%Y年%m月%d日')
+
+          # 构建 Discord Embed 消息
+          curl -X POST "$DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d @- << EOF
+          {
+            "embeds": [{
+              "title": "${WEATHER_ICON} ${TODAY} 广州天气预报",
+              "description": "${WEATHER_FULL}",
+              "color": 3447003,
+              "fields": [
+                {
+                  "name": "天气状况",
+                  "value": "${WEATHER}",
+                  "inline": true
+                }
+              ],
+              "footer": {
+                "text": "数据来源: wttr.in",
+                "icon_url": "https://wttr.in/favicon.ico"
+              },
+              "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
+            }]
+          }
+          EOF
+
+          echo "天气信息已成功发送到 Discord!"
