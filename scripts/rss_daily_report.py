@@ -496,52 +496,52 @@ def main():
             print("请设置环境变量: FEISHU_APP_ID 和 FEISHU_APP_SECRET")
             sys.exit(1)
 
-    # 1. 获取 RSS 内容
-    print("\n📡 步骤 1: 获取 RSS 内容")
-    parser = RSSParser(rss_pack_url)
-    items = parser.fetch_all_feeds()
+        # 1. 获取 RSS 内容
+        print("\n📡 步骤 1: 获取 RSS 内容")
+        parser = RSSParser(rss_pack_url)
+        items = parser.fetch_all_feeds()
 
-    if not items:
-        print("⚠️  过去 24 小时没有新的 RSS 更新")
-        sys.exit(0)
+        if not items:
+            print("⚠️  过去 24 小时没有新的 RSS 更新")
+            sys.exit(0)
 
-    # 2. 抓取文章内容
-    print("\n📖 步骤 2: 抓取文章内容")
-    fetcher = ContentFetcher()
-    generator = ReportGenerator(items, fetcher)
-    generator.select_top_items(max_per_source=2)
+        # 2. 抓取文章内容
+        print("\n📖 步骤 2: 抓取文章内容")
+        fetcher = ContentFetcher()
+        generator = ReportGenerator(items, fetcher)
+        generator.select_top_items(max_per_source=2)
 
-    # 3. 生成日报
-    print("\n📝 步骤 3: 生成日报")
-    report = generator.generate_report()
+        # 3. 生成日报
+        print("\n📝 步骤 3: 生成日报")
+        report = generator.generate_report()
 
-    if not report:
-        print("❌ 生成日报失败")
-        sys.exit(1)
+        if not report:
+            print("❌ 生成日报失败")
+            sys.exit(1)
 
-    # 保存到本地文件（用于调试）
-    today = datetime.now().strftime("%Y-%m-%d")
-    filename = f"/tmp/rss_report_{today}.md"
-    with open(filename, 'w', encoding='utf-8') as f:
-        f.write(report)
-    print(f"✅ 日报已保存到: {filename}")
+        # 保存到本地文件（用于调试）
+        today = datetime.now().strftime("%Y-%m-%d")
+        filename = f"/tmp/rss_report_{today}.md"
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write(report)
+        print(f"✅ 日报已保存到: {filename}")
 
-    # 4. 发布到飞书
-    print("\n🚀 步骤 4: 发布到飞书")
-    feishu = FeishuClient(feishu_app_id, feishu_app_secret)
+        # 4. 发布到飞书
+        print("\n🚀 步骤 4: 发布到飞书")
+        feishu = FeishuClient(feishu_app_id, feishu_app_secret)
 
-    if feishu.get_tenant_access_token():
-        # 创建文档
-        doc_title = f"{today} - Karpathy 精选 RSS 日报"
-        doc_id = feishu.create_document(doc_title, report)
+        if feishu.get_tenant_access_token():
+            # 创建文档
+            doc_title = f"{today} - Karpathy 精选 RSS 日报"
+            doc_id = feishu.create_document(doc_title, report)
 
-        if doc_id:
-            print(f"🎉 成功！日报已发布到飞书")
-            print(f"📄 文档 ID: {doc_id}")
+            if doc_id:
+                print(f"🎉 成功！日报已发布到飞书")
+                print(f"📄 文档 ID: {doc_id}")
+            else:
+                print("⚠️  发布到飞书失败，但日报已生成本地文件")
         else:
-            print("⚠️  发布到飞书失败，但日报已生成本地文件")
-    else:
-        print("⚠️  飞书认证失败，日报已生成本地文件")
+            print("⚠️  飞书认证失败，日报已生成本地文件")
 
         print("\n" + "=" * 60)
         print("✅ 任务完成")
